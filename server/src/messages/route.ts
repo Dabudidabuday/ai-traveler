@@ -10,8 +10,6 @@ const API_KEY = "xai-RqQB7kdKW01XpKp2K4kHYCvrmIjDzCVGXCGnlvKGACxu5fNxdAdMgoxge2T
 
 export const messageRoute = express.Router();
 
-
-
 const PossiblePlace = z.array(
   z.object({
     name: z.string(),
@@ -24,7 +22,6 @@ const PossiblePlace = z.array(
   })
 );
 type Place = z.infer<typeof PossiblePlace>[number];
-
 
 const openai = new OpenAI({
   apiKey: API_KEY,
