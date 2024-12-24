@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Autocomplete, Box, Button, MenuItem, TextField } from '@mui/material';
+import { Autocomplete, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -18,11 +19,15 @@ export const Form = ({ getPlaces }: FormProps) => {
   const [country, set$country] = useState('');
   const [city, set$city] = useState('');
 
-  const { handleSubmit, control, getValues, setValue, errors } = useForm({
+  const { handleSubmit, control, getValues, setValue } = useForm({
     defaultValues: {
       message: '',
       city: '',
       country: '',
+      tripDuration: '',
+      tripTheme: '',
+      walkingTrip: false,
+      eventType: '',
     },
   })
 
@@ -33,14 +38,11 @@ export const Form = ({ getPlaces }: FormProps) => {
         'https://restcountries.com/v3.1/all',
       )
 
-      return await response.data.map(({ name: { common }, ccn3 }) => ({id: ccn3, value: common})).sort((a, b) => a.value.localeCompare(b.value))
+      return await response.data.map(({ name: { common }, ccn3 }: { name: { common: string }, ccn3: string }) => ({id: ccn3, value: common})).sort((a: OptionItem, b: OptionItem) => a.value.localeCompare(b.value))
     },
   })
 
-  console.log('country', country);
-  console.log('city', city);
-
-  const { data: citiesList = [] } = useQuery({
+  const { data: citiesList = [], isPending: isCitiesPending } = useQuery({
     queryKey: ['getCities'],
     enabled: country.length > 0,
     queryFn: async () => {
@@ -59,109 +61,157 @@ export const Form = ({ getPlaces }: FormProps) => {
 
   const onSubmit = async () => {
     const message = getValues('message');
+    const tripDuration = getValues('tripDuration');
+    const tripTheme = getValues('tripTheme');
+    const isWalkingTrip = getValues('walkingTrip');
 
-    getPlaces({ message, country, city });
+    getPlaces({ message, country, city, tripDuration, tripTheme, isWalkingTrip });
     setValue('message', '');
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Box sx={{ display: 'flex', gap: '20px', }}>
+      <Grid container sx={{ display: 'flex', gap: '20px', }}>
+    
+      <Grid size={2}>
+        {isPending ? <CircularProgress /> : (
+          <Controller
+          name="country"
+          control={control}
+          render={({ field, ...props }) => (
+            <Autocomplete 
+              {...props}
+              options={countries}
+              disablePortal
+              autoHighlight
+              onChange={(_, data: { value: string } | null) => {
+                field.onChange(data?.value || '')
+                set$country(data?.value || '');
+              }}
+              getOptionLabel={(option) => {
+                return option.value?.length ? String(option.value): ''
+              }}
+              renderOption={(props, option: { value: string}) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <MenuItem
+                    key={key}
+                    value={option.value}
+                    {...optionProps}
+                  >
 
-      {!isPending && (
+                    {option.value}
+                  </MenuItem>
+                );
+              }}
+              renderInput={
+                (params) => 
+                  <TextField 
+                    {...params}
+                    label="Country"
+                  />
+              }
+            />
+        )}
+        />
+        )}
+      </Grid>
+
+
+      <Grid size={2}>
+        {isCitiesPending ? <CircularProgress /> : (
+          <Controller
+          name="city"
+          control={control}
+          render={({ field, ...props }) => (
+            <Autocomplete 
+              {...props}
+              options={citiesList}
+              disablePortal
+              autoHighlight
+              onChange={(_, data: { value: string } | null) => {
+                field.onChange(data?.value || '')
+                set$city(data?.value || '')
+              }}
+              getOptionLabel={(option) => {
+                return option.value?.length ? String(option.value): ''
+              }}
+              renderOption={(props, option) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <MenuItem
+                    key={key}
+                    value={option.value}
+                    {...optionProps}
+                  >
+
+                    {option.value}
+                  </MenuItem>
+                );
+              }}
+              renderInput={
+                (params) => 
+                  <TextField 
+                    {...params}
+                    label="City"
+                  />
+              }
+            />
+        )}
+        />
+        )}
+      </Grid>
+
+      <Grid size={2}>
         <Controller
-        name="country"
-        control={control}
-        render={({ field, ...props }) => (
-          <Autocomplete 
-            {...props}
-            options={countries}
-            disablePortal
-            autoHighlight
-            onChange={(e, data: { value: string}) => {
-              field.onChange(data?.value || '')
-              // setValue('country', data.value)
-              set$country(data?.value || '');
-            }}
-            getOptionLabel={(option) => {
-              return option.value?.length ? String(option.value): ''
-            }}
-            renderOption={(props, option: { value: string}) => {
-              const { key, ...optionProps } = props;
-              return (
-                <MenuItem
-                  key={key}
-                  value={option.value}
-                  {...optionProps}
-                >
+          name="tripDuration"
+          control={control}
+          render={({ field }) => <TextField label="Trip duration" sx={{width: '100%'}} {...field}  />}
+          />
+      </Grid>
 
-                  {option.value}
-                </MenuItem>
-              );
-            }}
-            renderInput={
-              (params) => 
-                <TextField 
-                  {...params}
-                  label="Country"
-                  sx={{minWidth: '250px'}}
-                />
+      <Grid size={2}>
+        <Controller
+          name="tripTheme"
+          control={control}
+          render={({ field }) => <TextField label="Main theme" sx={{width: '100%'}} {...field}  />}
+          />
+      </Grid>
+
+      <Grid size={2}>
+        <FormControl sx={{width: '100%'}}>
+          <InputLabel>Event Type</InputLabel>
+          <Controller
+            name="eventType"
+            control={control}
+            render={({ field }) => 
+              <Select label="Event Type" {...field}  >
+                <MenuItem value="walking">Concert</MenuItem>
+                <MenuItem value="driving">Tour</MenuItem>
+              </Select>
             }
           />
-      )}
-      />
-      )}
+        </FormControl>
+      </Grid>
 
-      {citiesList && (
+      
+      <Grid size={1}>
         <Controller
-        name="city"
-        control={control}
-        render={({ field, ...props }) => (
-          <Autocomplete 
-            {...props}
-            options={citiesList}
-            disablePortal
-            autoHighlight
-            onChange={(e, data: { value: string}) => {
-              field.onChange(data?.value || '')
-              // setValue('city', data.value)
-              set$city(data?.value || '')
-            }}
-            getOptionLabel={(option) => {
-              return option.value?.length ? String(option.value): ''
-            }}
-            renderOption={(props, option) => {
-              const { key, ...optionProps } = props;
-              return (
-                <MenuItem
-                  key={key}
-                  value={option.value}
-                  {...optionProps}
-                >
-
-                  {option.value}
-                </MenuItem>
-              );
-            }}
-            renderInput={
-              (params) => 
-                <TextField 
-                  {...params}
-                  label="City"
-                  sx={{minWidth: '220px'}}
-                />
-            }
+          name="walkingTrip"
+          control={control}
+          render={({ field }) =><FormControlLabel label="Walking?" control={<Checkbox sx={{width: '100%'}} {...field}  />}/>}
           />
-      )}
-      />
-      )}
+      </Grid>
+
+      <Grid size={12} sx={{display: 'flex', gap: '20px'}}>
         <Controller
           name="message"
           control={control}
           render={({ field }) => <TextField sx={{width: '100%'}} {...field}  />}
-        />
+          />
         <Button type='submit' variant='contained'>Submit</Button>
-      </Box>
+      </Grid>
+    </Grid>
     </form>
   )
 }

@@ -7,7 +7,7 @@ import { routes } from './routes';
 
 dotenv.config();
 const app: Application = express();
-const PORT = process.env.PORT
+const PORT = process.env.PORT;
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));

@@ -4,6 +4,7 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 
 import getImages from '../images';
+import { TripRequest } from './messages.types';
 
 const API_KEY = "xai-RqQB7kdKW01XpKp2K4kHYCvrmIjDzCVGXCGnlvKGACxu5fNxdAdMgoxge2Tela6iq2TVsle1A7GFx314";
 
@@ -17,8 +18,10 @@ const PossiblePlace = z.array(
     workingHours: z.string(),
     googleMapAddress: z.string(),
     advice: z.string(),
-    latitude: z.number(),
-    longitude: z.number()
+    location: z.object({
+      latitude: z.number(),
+      longitude: z.number()
+    })
   })
 );
 type Place = z.infer<typeof PossiblePlace>[number];
@@ -28,7 +31,7 @@ const openai = new OpenAI({
   baseURL: 'https://api.x.ai/v1'
 })
 
-const generateCompletion = async ({message, country, city}: { message: string, country: string, city: string }) => {
+const generateCompletion = async ({message, country, city, tripDuration, tripTheme, isWalkingTrip}: TripRequest) => {
   const completion = await openai.chat.completions.create({
     model: "grok-2-1212",
     messages: [
@@ -36,11 +39,22 @@ const generateCompletion = async ({message, country, city}: { message: string, c
         role: "system",
         content:
           // "You are travel expert. You know what's best to do and when. You will help to find exactly right place for current mood, desired atmosphere and quiet/loud noise levels or other attributes. When asked about places, suggest 3 places with specific details from request. Reply with JSON, which contains fields: name, atmosphere, working hours, google map address, advice",
-          "You are Yoda. Suggest 3 unforgettable experiences to do or participate in specific city.Return only 3 places or activities.",
+          // "You are Yoda. Suggest 3 unforgettable experiences to do or participate in specific city.Return only 3 places or activities.",
+          `
+          You are travel expert. You know what's best to do and when.
+          You will help to find exactly right place for current mood, desired atmosphere.
+          When asked about places, suggest 3 places with specific details from request.
+          `,
       },
       {
         role: "user",
-        content: `${message}. It has to be in or near with ${city}, ${country}`,
+        content: `
+          ${message}.
+          It has to be in or near with ${city}, ${country}
+          ${isWalkingTrip ? `It has to be walking trip. So distance between places should be 1300 meters or less.` : ''}
+          ${tripTheme ? `Each place has to be related to ${tripTheme} theme.` : ''}
+          ${tripDuration ? `It has to be for ${tripDuration} duration in total time, that I will spend on trip, cosider time for getting/moving between places.` : ''}
+          `,
       },
     ],
     response_format: zodResponseFormat(PossiblePlace, 'event'), 
