@@ -18,10 +18,10 @@ function App() {
   const [data, set$data] = useState([]);
   const [markers, set$markers] = useState([]);
 
-  // const { isLoaded } = useJsApiLoader({
-  //   id: 'google-map-script',
-  //   googleMapsApiKey: 'xai-RqQB7kdKW01XpKp2K4kHYCvrmIjDzCVGXCGnlvKGACxu5fNxdAdMgoxge2Tela6iq2TVsle1A7GFx314',
-  // })
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'xai-RqQB7kdKW01XpKp2K4kHYCvrmIjDzCVGXCGnlvKGACxu5fNxdAdMgoxge2Tela6iq2TVsle1A7GFx314',
+  })
 
   const fetchPossiblePlaces = async ({message, country, city}: PlacesRequest) => {
     const possiblePlaces = await api.post('/message', {message, country, city});
@@ -88,7 +88,7 @@ function App() {
         ))}
       </Grid>
       }
-      {/* <GoogleMap
+      <GoogleMap
         mapContainerStyle={{ width: '100%', height: '200px' }}
         // center={center}
         zoom={10}
@@ -98,7 +98,7 @@ function App() {
        {markers && markers?.map(({ position }) => (
           <Marker position={position} />
         ))}
-      </GoogleMap> */}
+      </GoogleMap>
     </Box>
   )
 }
