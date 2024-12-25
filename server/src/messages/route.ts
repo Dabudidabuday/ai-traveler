@@ -21,10 +21,11 @@ const PossiblePlace = z.array(
     location: z.object({
       latitude: z.number(),
       longitude: z.number()
-    })
+    }),
+    placeType: z.string()
   })
 );
-type Place = z.infer<typeof PossiblePlace>[number];
+export type Place = z.infer<typeof PossiblePlace>[number];
 
 const openai = new OpenAI({
   apiKey: API_KEY,
@@ -51,7 +52,12 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
         content: `
           ${message}.
           It has to be in or near with ${city}, ${country}
-          ${isWalkingTrip ? `It has to be walking trip. So distance between places should be 1300 meters or less.` : ''}
+          ${isWalkingTrip 
+            ? `
+              It has to be walking trip.
+              So distance between places should be 1300 meters or less.
+              Return placer in order by most efficient way to walk from first to the last place.` 
+            : ''}
           ${tripTheme ? `Each place has to be related to ${tripTheme} theme.` : ''}
           ${tripDuration ? `It has to be for ${tripDuration} duration in total time, that I will spend on trip, cosider time for getting/moving between places.` : ''}
           `,
@@ -64,12 +70,10 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
   return completion.choices[0].message.content;
 };
 
-
 messageRoute.post('/message', async (req: Request, res: Response) => {
   const message = await generateCompletion(req.body);
   const places = PossiblePlace.parse(JSON.parse(String(message)));
-  const placesNames = places.map((place: Place) => place.name);
-  const imagePromises = placesNames.map((name: string) => getImages(name));
+  const imagePromises = places.map((place: Place) => getImages({place, userRequest:req.body}));
   const requestedImages = await Promise.all(imagePromises);
   const images = await Promise.all(requestedImages.map(response => response.json()))
   const imagesLinks = images.map((data) => data.items);
