@@ -18,6 +18,7 @@ const PossiblePlace = z.array(
     workingHours: z.string(),
     googleMapAddress: z.string(),
     advice: z.string(),
+    locationName: z.string(),
     location: z.object({
       latitude: z.number(),
       longitude: z.number()
@@ -39,12 +40,10 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
       {
         role: "system",
         content:
-          // "You are travel expert. You know what's best to do and when. You will help to find exactly right place for current mood, desired atmosphere and quiet/loud noise levels or other attributes. When asked about places, suggest 3 places with specific details from request. Reply with JSON, which contains fields: name, atmosphere, working hours, google map address, advice",
-          // "You are Yoda. Suggest 3 unforgettable experiences to do or participate in specific city.Return only 3 places or activities.",
           `
           You are travel expert. You know what's best to do and when.
           You will help to find exactly right place for current mood, desired atmosphere.
-          When asked about places, suggest 3 places with specific details from request.
+          When asked about places, suggest 3-6 places with specific details from request.
           `,
       },
       {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
+import { AdvancedMarker, Pin, useMap, Map } from "@vis.gl/react-google-maps";
+
 import { Place } from "../App";
+import { Typography } from "@mui/material";
 
 
 export const TripMap = ({ data }: { data: Place[] }) => {
@@ -11,8 +13,8 @@ export const TripMap = ({ data }: { data: Place[] }) => {
   useEffect(() => {
     if (!data || !map) return;
 
-    const placesLocations = data.map(({ location, name }) => ({
-      key: name, 
+    const placesLocations = data.map(({ location, name }, index: number) => ({
+      key: `${name}-${index}`, 
       location: { lat: location.latitude, lng: location.longitude}
     }));
 
@@ -53,12 +55,22 @@ export const TripMap = ({ data }: { data: Place[] }) => {
     }
   }, [data, map]);
 
+  console.log('routeUrl', routeUrl);
+
   return (
-    <>
-      {data.map(({ location, name }) => (
+    <Map
+      defaultZoom={5}
+      // zoom={12}
+      // center={{ lat: 20, lng: 1 }}
+      // defaultCenter={{ lat: 20, lng: 1 }}
+      mapId={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+      style={{width: '100%', height: '400px'}}
+    >
+      {data.map(({ location, name }, index: number) => (
         <AdvancedMarker
-          key={name}
+          key={`${name}-${index}`}
           position={{ lat: location.latitude, lng: location.longitude }}
+          name={name}
         >
           <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
@@ -93,6 +105,6 @@ export const TripMap = ({ data }: { data: Place[] }) => {
           </a>
         </div>
       )}
-    </>
+    </Map>
   );
 };

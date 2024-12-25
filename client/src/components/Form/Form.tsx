@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Autocomplete, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Autocomplete, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ interface OptionItem {
 }
 
 export const Form = ({ getPlaces }: FormProps) => {
+  const [citiesList, set$citiesList] = useState([]);
   const [country, set$country] = useState('');
   const [city, set$city] = useState('');
 
@@ -27,7 +28,7 @@ export const Form = ({ getPlaces }: FormProps) => {
       tripDuration: '',
       tripTheme: '',
       walkingTrip: false,
-      eventType: '',
+      events: false,
     },
   })
 
@@ -42,7 +43,7 @@ export const Form = ({ getPlaces }: FormProps) => {
     },
   })
 
-  const { data: citiesList = [], isPending: isCitiesPending } = useQuery({
+  const { data: fetchedCities = [], isPending: isCitiesPending, isLoading: isCitiesLoading } = useQuery({
     queryKey: ['getCities'],
     enabled: country.length > 0,
     queryFn: async () => {
@@ -53,19 +54,31 @@ export const Form = ({ getPlaces }: FormProps) => {
         }
       )
 
-      return await response.data.data
+      const formattedCities = await response.data.data
         .map((city: string) => ({id: city, value: city}))
         .sort((a: OptionItem, b: OptionItem) => a.value.localeCompare(b.value));
+
+      set$citiesList(formattedCities);
+
+      return formattedCities;
     },
   });
+
+  useEffect(() => {
+    if(country == '') {
+      set$citiesList([]);
+      setValue('city', '');
+    }
+  }, [country, setValue]);
 
   const onSubmit = async () => {
     const message = getValues('message');
     const tripDuration = getValues('tripDuration');
     const tripTheme = getValues('tripTheme');
     const isWalkingTrip = getValues('walkingTrip');
+    const events = getValues('events');
 
-    getPlaces({ message, country, city, tripDuration, tripTheme, isWalkingTrip });
+    getPlaces({ message, country, city, tripDuration, tripTheme, isWalkingTrip, events });
     setValue('message', '');
   }
 
@@ -119,7 +132,7 @@ export const Form = ({ getPlaces }: FormProps) => {
 
 
       <Grid size={2}>
-        {isCitiesPending ? <CircularProgress /> : (
+        {isCitiesLoading && country ? <CircularProgress /> : (
           <Controller
           name="city"
           control={control}
@@ -179,19 +192,11 @@ export const Form = ({ getPlaces }: FormProps) => {
       </Grid>
 
       <Grid size={2}>
-        <FormControl sx={{width: '100%'}}>
-          <InputLabel>Event Type</InputLabel>
-          <Controller
-            name="eventType"
-            control={control}
-            render={({ field }) => 
-              <Select label="Event Type" {...field}  >
-                <MenuItem value="walking">Concert</MenuItem>
-                <MenuItem value="driving">Tour</MenuItem>
-              </Select>
-            }
+        <Controller
+          name="events"
+          control={control}
+          render={({ field }) =><FormControlLabel label="Show events" control={<Checkbox {...field} />} />}
           />
-        </FormControl>
       </Grid>
 
       
@@ -199,7 +204,7 @@ export const Form = ({ getPlaces }: FormProps) => {
         <Controller
           name="walkingTrip"
           control={control}
-          render={({ field }) =><FormControlLabel label="Walking?" control={<Checkbox sx={{width: '100%'}} {...field}  />}/>}
+          render={({ field }) => <FormControlLabel label="Walking?" control={<Checkbox {...field} />} />}
           />
       </Grid>
 
