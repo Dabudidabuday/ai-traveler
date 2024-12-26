@@ -1,3 +1,10 @@
 import axios from "axios";
 
-export const api = axios.create({ baseURL: "http://localhost:3000", timeout: 300000 })
+const baseURL = process.env.NODE_ENV === 'production' 
+  ? '/'  // In production, use relative path
+  : 'http://localhost:3000/'; // In development, use localhost
+
+export const api = axios.create({ 
+  baseURL, 
+  timeout: 300000 
+});

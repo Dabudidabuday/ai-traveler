@@ -1,4 +1,5 @@
 import express, { Application, json, Request, Response } from 'express';
+import path from 'path';
 const dotenv = require('dotenv');
 const cors = require('cors');
 import bodyParser from 'body-parser';
@@ -7,19 +8,23 @@ import { routes } from './routes';
 
 dotenv.config();
 const app: Application = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
-//routes
+// API routes
 app.use('/', routes);
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('This is default path. Server runs on 3000');
-})
+// Serve static files from React app
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
-app.listen(PORT || 3000, () => {
-  console.log(`we are on ${PORT}`)
-})
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
