@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import getImages from '../images';
 import { TripRequest } from './messages.types';
+import { getLocation } from '../utils/getLocation';
 
 const API_KEY = "xai-RqQB7kdKW01XpKp2K4kHYCvrmIjDzCVGXCGnlvKGACxu5fNxdAdMgoxge2Tela6iq2TVsle1A7GFx314";
 
@@ -19,6 +20,7 @@ const PossiblePlace = z.array(
     googleMapAddress: z.string(),
     advice: z.string(),
     locationName: z.string(),
+    fullAddress: z.string(),
     location: z.object({
       latitude: z.number(),
       longitude: z.number()
@@ -39,12 +41,19 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
     messages: [
       {
         role: "system",
-        content:
-          `
+        content: `
           You are travel expert. You know what's best to do and when.
           You will help to find exactly right place for current mood, desired atmosphere.
-          When asked about places, suggest 3-6 places with specific details from request.
-          `,
+          When asked about places, suggest 2-8 places with specific details from request.
+
+          You have to provide the full address of each place.
+          Example of full address: 
+          <example-model>
+            { fullAddress: "123 Main St, New York, NY 10001" }
+            { fullAddress: "Soi Sukhumvit 26, Khlong Tan, Khlong Toei, Bangkok 10110" }
+          </example-model>
+          
+        `,
       },
       {
         role: "user",
@@ -54,9 +63,23 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
           ${isWalkingTrip 
             ? `
               It has to be walking trip.
-              So distance between places should be 1300 meters or less.
-              Return placer in order by most efficient way to walk from first to the last place.` 
+              So distance between places should be 1100 meters or less.
+              Consider only walking type of transportation available.` 
             : ''}
+
+
+          ${isWalkingTrip 
+            ? `
+            Important instructions for walking routes:
+            1. Return places in the most efficient walking order
+            2. First place should be a good starting point (e.g., near public transport or city center)
+            3. Arrange subsequent places to minimize backtracking
+            4. Each next place should be within 1100 meters from the previous one
+            5. Consider the natural flow of the area (main streets, landmarks, etc.)
+            6. Last place should ideally be near public transport or in a convenient location
+            7. This places must be as close to each other as possible.
+            7. If place is more than 1.5 kilometers away from previous one, do not return it.
+            ` : ''}
           ${tripTheme ? `Each place has to be related to ${tripTheme} theme.` : ''}
           ${tripDuration ? `It has to be for ${tripDuration} duration in total time, that I will spend on trip, cosider time for getting/moving between places.` : ''}
           `,
@@ -80,5 +103,12 @@ messageRoute.post('/message', async (req: Request, res: Response) => {
     ...place,
     images: imagesLinks[index]
   }));
-  res.send(placesWithImages);
+
+  const locations = await Promise.all(placesWithImages.map((place) => getLocation(place.fullAddress)));
+  const placesWithLocations = placesWithImages.map((place, index) => ({
+    ...place,
+    location: locations[index]?.results?.[0]
+  }));
+
+  res.send(placesWithLocations);
 })

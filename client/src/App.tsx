@@ -12,10 +12,7 @@ export interface Place {
   atmosphere: string;
   advice: string;
   images: { link: string, title: string }[];
-  location: {
-    latitude: number;
-    longitude: number;
-  }
+  location: unknown;
 }
 
 export interface PlacesRequest {
@@ -33,7 +30,7 @@ function App() {
   const [userRequest, set$userRequest] = useState<PlacesRequest>();
 
   const { isLoading, data = [] } = useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', userRequest],
     enabled: !!userRequest,
     retry: 1,
     queryFn: async () => {

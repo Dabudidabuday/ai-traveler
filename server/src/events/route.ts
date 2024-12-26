@@ -20,9 +20,7 @@ const Events =
       time: z.string(),
       locationName: z.string(),
       fullAddress: z.string(),
-      eventImageSrc: z.string(),
       sourceLink: z.string(),
-      googleMapsLocation: z.string(),
       location: z.object({
         latitude: z.number(),
         longitude: z.number()

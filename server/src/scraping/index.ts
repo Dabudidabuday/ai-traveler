@@ -48,7 +48,7 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
 
     const monthAndYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-    const searchQuery = `musical concerts and events in ${monthAndYear} in ${city}, ${country}`;
+    const searchQuery = `event+calendar+for+${monthAndYear}+in+${city},+${country}`;
     await page.goto('https://www.google.com/search?q=' + searchQuery);
 
     await page.waitForSelector('body');
@@ -83,22 +83,67 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
                 You are given a page with events and different parties.
                 Your goal is to get the most information about events and parties in ${city}, ${country}.
                 You are asked to provide detailed information about each event.
-                You are asked to provide the location address of each event and source link to this event.
-                The event must be upcomping, it means date must be not earlier than ${today} and not later than 2 weeks from ${today}.
 
-                Grab src image related to event and put it in eventImageSrc field.
-                If there is no image, put empty string in eventImageSrc field.
-                Return only events, concerts, festivals, shows, parties.
+                You have to provide the location full address of each event and source link to this event.
+                Example of full location address: 
+                <example-model>
+                 { fullAddress: "123 Main St, New York, NY 10001" }
+                 { fullAddress: "Soi Sukhumvit 26, Khlong Tan, Khlong Toei, Bangkok 10110" }
+                </example-model>
+
+                You asked to provide source link from where you get this specific event.
+                Example of source link:
+                <example-model>
+                 { sourceLink: "https://visit.bangkok.go.th/festival-calendar" }
+                 { sourceLink: "https://www.businesseventsthailand.com/en/event-calendar" }
+                </example-model>
                 Do not change the source link, just return it in valid format.
+                Do not generate source link by yourself, just return it as it is in valid format.
+
+                You need to provide location name of each event.
+                Example of location name:
+                <example-model>
+                 { locationName: "Bar 'The Gypsy', Bangkok" }
+                 { locationName: "Restaurant 'The Citrom', Da Nang" }
+                 { locationName: "Club 'The Moon', Phuket" }
+                </example-model>
+
+                You need to provide event name.
+                Example of event name:
+                <example-model>
+                 { eventName: "Thai New Year Party" }
+                 { eventName: "Latina evening at 'The Gypsy'" }
+                 { eventName: "Festival of Lights" }
+                </example-model>
+
+                You need to provide event date.
+                Example of event date:
+                <example-model>
+                 { date: "31-12-2024" }
+                 { date: "02-01-2025" }
+                 { date: "15-10-2025" }
+                 </example-model>
+                
+                Return only events, concerts, festivals, shows, parties.
                 Do not return any other kind of data.
                 Do not return event if not enough specific information about it, just skip it.
+                Do not hallucinate, just return what you see in the page.
 
+                if you are not sure about the information, do not return value in the field.
+
+                Just return empty string instead of "unknown" or "unavailable".
+                <example-model>
+                 { date: "" }
+                 { locationName: "" }
+                 { eventName: "" }
+                </example-model>
               `
             },
             { role: "user", content: `
               ${tripTheme ? `Each event has to be related to ${tripTheme} theme.` : ''}
               ${message ? `Consider this wishes ${message} theme.` : ''}
 
+              The event must be upcomping, it means date must be not earlier than ${today} and not later than 2 weeks from ${today}.
               Here is the scraped page: ${body}. Return in valid JSON format.` },
           ],
           response_format: zodResponseFormat(
@@ -110,9 +155,7 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
                 time: z.string(),
                 locationName: z.string(),
                 fullAddress: z.string(),
-                eventImageSrc: z.string(),
                 sourceLink: z.string(),
-                googleMapsLocation: z.string(),
                 location: z.object({
                   latitude: z.number(),
                   longitude: z.number()
@@ -144,9 +187,3 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
 
   return events;
 }
-
- // scrapePlaces()
-//   .catch(error => {
-//     console.error('Failed to scrape places:', error);
-//     process.exit(1);
-//   });
