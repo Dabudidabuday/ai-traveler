@@ -44,8 +44,8 @@ export const Form = ({ getPlaces }: FormProps) => {
   })
 
   const { data: fetchedCities = [], isPending: isCitiesPending, isLoading: isCitiesLoading } = useQuery({
-    queryKey: ['getCities'],
-    enabled: country.length > 0,
+    queryKey: ['cities', country],
+    enabled: Boolean(country),
     queryFn: async () => {
       const response = await axios.post(
         'https://countriesnow.space/api/v0.1/countries/cities',
@@ -63,13 +63,6 @@ export const Form = ({ getPlaces }: FormProps) => {
       return formattedCities;
     },
   });
-
-  useEffect(() => {
-    if(country == '') {
-      set$citiesList([]);
-      setValue('city', '');
-    }
-  }, [country, setValue]);
 
   const onSubmit = async () => {
     const message = getValues('message');

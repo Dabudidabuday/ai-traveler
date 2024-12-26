@@ -72,7 +72,7 @@ const generateCompletion = async ({message, country, city, tripDuration, tripThe
 messageRoute.post('/message', async (req: Request, res: Response) => {
   const message = await generateCompletion(req.body);
   const places = PossiblePlace.parse(JSON.parse(String(message)));
-  const imagePromises = places.map((place: Place) => getImages({place, userRequest:req.body}));
+  const imagePromises = places.map((place: Place) => getImages({ place, userRequest: req.body }));
   const requestedImages = await Promise.all(imagePromises);
   const images = await Promise.all(requestedImages.map(response => response.json()))
   const imagesLinks = images.map((data) => data.items);

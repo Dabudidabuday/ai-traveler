@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AdvancedMarker, Pin, useMap, Map } from "@vis.gl/react-google-maps";
+import { AdvancedMarker, Pin, useMap, Map, InfoWindow } from "@vis.gl/react-google-maps";
 
 import { Place } from "../App";
 import { Typography } from "@mui/material";
@@ -66,16 +66,44 @@ export const TripMap = ({ data }: { data: Place[] }) => {
       mapId={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
       style={{width: '100%', height: '400px'}}
     >
-      {data.map(({ location, name }, index: number) => (
-        <AdvancedMarker
-          key={`${name}-${index}`}
-          position={{ lat: location.latitude, lng: location.longitude }}
-          name={name}
-        >
-          <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
-        </AdvancedMarker>
-      ))}
+      {data.map(({ location, googleMaps, name }, index: number) => {
+        if(!googleMaps) return null;
 
+        return (
+          <AdvancedMarker
+            key={`${name}-${index}`}
+            position={googleMaps?.geometry?.location || { lat: location.latitude, lng: location.longitude}}
+          >
+            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          </AdvancedMarker>
+        )
+      }
+        
+      )}
+{/* 
+      {data.map(({ location, googleMaps, name, workingHours, atmosphere }, index: number) => (
+        <InfoWindow
+          key={`info-${name}-${index}`}
+          anchor={document.getElementById(`marker-${index}`)}
+          position={googleMaps?.geometry?.location || {}}
+          onCloseClick={() => {}}
+        >
+          <div style={{
+            padding: '8px',
+            maxWidth: '200px'
+          }}>
+            <Typography variant="subtitle1" sx={{fontWeight: 'bold', mb: 1}}>
+              Location: {googleMaps?.fullAddress}
+            </Typography>
+            <Typography variant="subtitle1" sx={{fontWeight: 'bold', mb: 1}}>
+              Name: {name}
+            </Typography>
+
+            
+
+          </div>
+        </InfoWindow>
+      ))} */}
       {routeUrl && (
         <div style={{ 
           position: 'absolute', 

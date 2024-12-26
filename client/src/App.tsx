@@ -35,6 +35,7 @@ function App() {
   const { isLoading, data = [] } = useQuery({
     queryKey: ['events'],
     enabled: !!userRequest,
+    retry: 1,
     queryFn: async () => {
       if (userRequest?.events) {
         const response = await api.post('/events', userRequest)

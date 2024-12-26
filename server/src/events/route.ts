@@ -1,11 +1,15 @@
 import express, { Request, Response } from 'express';
+import {Client} from "@googlemaps/google-maps-services-js";
 import { z } from 'zod';
 
 import getImages from '../images';
 import { scrapeEvents } from '../scraping';
+import { getLocation } from '../utils/getLocation';
 
 
 export const eventsRoute = express.Router();
+
+const googleMapsClient = new Client({});
 
 const Events = 
   z.array(
@@ -15,6 +19,7 @@ const Events =
       date: z.string(),
       time: z.string(),
       locationName: z.string(),
+      fullAddress: z.string(),
       eventImageSrc: z.string(),
       sourceLink: z.string(),
       googleMapsLocation: z.string(),
@@ -38,7 +43,14 @@ eventsRoute.post('/events', async (req: Request, res: Response) => {
     //   ...event,
     //   images: imagesLinks[index]
     // }));
-    res.send(parsedEvents);
+
+    const locations = await Promise.all(parsedEvents.map((event) => getLocation(event.fullAddress)));
+
+    const eventsWithLocations = parsedEvents.map((event: Event, index: number) => ({
+      ...event,
+      googleMaps: locations[index]?.results?.[0] || null
+    }));
+    res.send(eventsWithLocations);
   } catch (error) {
     console.error('Error in events route', error);
     res.status(500).send('Internal server error');

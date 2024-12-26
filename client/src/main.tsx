@@ -11,7 +11,15 @@ import App from './App.tsx';
 import { APIProvider } from '@vis.gl/react-google-maps';
 
 const theme = createTheme();
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: false
+    }
+  }
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

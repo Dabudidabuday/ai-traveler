@@ -76,19 +76,29 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
         const completion = await openai.chat.completions.create({
           model: "grok-2-1212",
           messages: [
-            { role: "user", content: `
-              Give me the detailed information about upcoming concerts/events in ${city}, ${country}.
-              The event must be upcomping, it means date must be not earlier than ${today} and not later than 2 weeks from ${today}.
-              Grab src image related to event and put it in eventImageSrc field.
-              If there is no image, put empty string in eventImageSrc field.
+            {
+              role: "system",
+              content: `
+                You are an expert in events and parties.
+                You are given a page with events and different parties.
+                Your goal is to get the most information about events and parties in ${city}, ${country}.
+                You are asked to provide detailed information about each event.
+                You are asked to provide the location address of each event and source link to this event.
+                The event must be upcomping, it means date must be not earlier than ${today} and not later than 2 weeks from ${today}.
 
+                Grab src image related to event and put it in eventImageSrc field.
+                If there is no image, put empty string in eventImageSrc field.
+                Return only events, concerts, festivals, shows, parties.
+                Do not change the source link, just return it in valid format.
+                Do not return any other kind of data.
+                Do not return event if not enough specific information about it, just skip it.
+
+              `
+            },
+            { role: "user", content: `
               ${tripTheme ? `Each event has to be related to ${tripTheme} theme.` : ''}
               ${message ? `Consider this wishes ${message} theme.` : ''}
-              
-              Return only events, concerts, festivals, shows, parties.
-              Do not return any other kind of data.
-              Do not return event if not enough specific information about it, just skip it.
-              If you are not sure in the event data, skip it.
+
               Here is the scraped page: ${body}. Return in valid JSON format.` },
           ],
           response_format: zodResponseFormat(
@@ -99,6 +109,7 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
                 date: z.string(),
                 time: z.string(),
                 locationName: z.string(),
+                fullAddress: z.string(),
                 eventImageSrc: z.string(),
                 sourceLink: z.string(),
                 googleMapsLocation: z.string(),
