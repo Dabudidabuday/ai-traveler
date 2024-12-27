@@ -6,15 +6,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataPreview } from './components/DataPreview/DataPreview';
 
-export interface Place {
-  name: string;
-  workingHours: string;
-  atmosphere: string;
-  advice: string;
-  images: { link: string, title: string }[];
-  location: unknown;
-}
-
 export interface PlacesRequest {
   message: string;
   country?: string;

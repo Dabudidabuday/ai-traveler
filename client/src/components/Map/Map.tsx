@@ -1,11 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import type { FC } from 'react';
+import { useEffect, useRef, useState } from "react";
 import { useMap, Map } from "@vis.gl/react-google-maps";
 import { Typography } from "@mui/material";
+import { computeTotalDistance } from './Helpers';
+import { Place } from '../../types';
+import { PlaceLocation } from './Map.types';
+import { Event } from '../../components/DataPreview/DataPreview.types';
+import { SaveRoute } from './components/SaveRoute';
 
-import { Place } from "../App";
-import { computeTotalDistance } from "./Helpers";
-
-export const TripMap = ({ data }: { data: Place[] }) => {
+export const TripMap: FC<{ data: (Place | Event)[] }> = ({ data }) => {
   const map = useMap();
   const [routeUrl, set$routeUrl] = useState<string>('');
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -14,17 +17,24 @@ export const TripMap = ({ data }: { data: Place[] }) => {
   useEffect(() => {
     if (!data || !map) return;
 
-    const placesLocations = data.map(({ location, name }, index: number) => ({
-      key: `${name}-${index}`, 
-      location: location?.geometry?.location
-    }));
+    const placesLocations: PlaceLocation[] = data
+      .filter(place => !!place.location?.geometry?.location)
+      .map(({ name, location }: Place | Event, index: number) =>  (
+          {
+            key: `${name}-${index}`, 
+            location: location?.geometry?.location
+          }
+        )
+      );
+
+    console.log('placesLocations', placesLocations);
 
     if (placesLocations.length > 1) {
-      const origin = `${placesLocations[0].location.lat},${placesLocations[0].location.lng}`;
-      const destination = `${placesLocations[placesLocations.length - 1].location.lat},${placesLocations[placesLocations.length - 1].location.lng}`;
+      const origin = `${placesLocations[0].location?.lat},${placesLocations[0].location?.lng}`;
+      const destination = `${placesLocations[placesLocations.length - 1].location?.lat},${placesLocations[placesLocations.length - 1].location?.lng}`;
       const waypoints = placesLocations
         .slice(1, -1)
-        .map(place => `${place.location.lat},${place.location.lng}`)
+        .map(place => `${place.location?.lat},${place.location?.lng}`)
         .join('|');
       
       const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=walking`;
@@ -43,9 +53,12 @@ export const TripMap = ({ data }: { data: Place[] }) => {
       }));
 
       directionsService.route({
-        origin: { lat: placesLocations[0].location.lat, lng: placesLocations[0].location.lng },
-        destination: { lat: placesLocations[placesLocations.length - 1].location.lat, lng: placesLocations[placesLocations.length - 1].location.lng },
-        waypoints: preparedWaypoints,
+        origin: placesLocations[0].location || { lat: 0, lng: 0 },
+        destination: placesLocations[placesLocations.length - 1].location || { lat: 0, lng: 0 },
+        waypoints: preparedWaypoints.map(wp => ({
+          location: wp.location || { lat: 0, lng: 0 },
+          stopover: wp.stopover
+        })),
         travelMode: google.maps.TravelMode.WALKING,
         optimizeWaypoints: true
       })
@@ -81,46 +94,20 @@ export const TripMap = ({ data }: { data: Place[] }) => {
 
   return (
     <>
-    {totalDistance && <Typography variant="subtitle1" sx={{fontWeight: 'bold', mb: 1, textAlign: 'left'}}>
-      Total Distance: {totalDistance} km
-    </Typography>}
-    <Map
-      defaultZoom={5}
-      defaultCenter={{ lat: 20, lng: 1 }}
-      mapId="7623ed04bbcb3bc9"
-      style={{width: '100%', height: '400px'}}
-    >
+      {totalDistance && 
+        <Typography variant="subtitle1" sx={{fontWeight: 'bold', mb: 1, textAlign: 'left'}}>
+          Total Distance: {totalDistance} km
+        </Typography>
+      }
 
-      {routeUrl && (
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '20px', 
-          left: '20px', 
-          backgroundColor: 'white', 
-          padding: '10px', 
-          borderRadius: '4px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-        }}>
-          <a 
-            href={routeUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{
-              textDecoration: 'none',
-              color: '#1976d2',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <span>Save Route</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
-            </svg>
-          </a>
-        </div>
-      )}
-    </Map>
+      <Map
+        defaultZoom={5}
+        defaultCenter={{ lat: 20, lng: 1 }}
+        mapId="7623ed04bbcb3bc9"
+        style={{width: '100%', height: '400px'}}
+      >
+        <SaveRoute routeUrl={routeUrl} />
+      </Map>
     </>
   );
 };

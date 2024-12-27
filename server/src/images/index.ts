@@ -11,7 +11,7 @@ const getImages = async ({ place, userRequest , count}: { place: any, userReques
 //     method: 'GET',
 //   });
 
-   const response = await fetch(`https://www.googleapis.com/customsearch/v1?q=${place.name}+in+${place?.locationName || ''}+exterior+OR+interior+${userRequest?.country || ''}+${userRequest?.city || ''}&searchType=image&count=${count || 8}&cx=${CX_ID}&key=${API_KEY}&lr=lang_th&safe=active`, {
+   const response = await fetch(`https://www.googleapis.com/customsearch/v1?q=${place.name}+in+${place?.locationName || ''}+exterior+OR+interior+${userRequest?.country || ''}+${userRequest?.city || ''}&searchType=image&count=${count || 3}&cx=${CX_ID}&key=${API_KEY}&lr=lang_th&safe=active`, {
     method: 'GET',
   });
 

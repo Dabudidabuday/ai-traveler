@@ -1,48 +1,45 @@
-import React from 'react';
 import { Box, Card, CircularProgress, ImageList, ImageListItem, Typography, Link } from '@mui/material';
-import Grid from '@mui/material/Grid2'
-import { Place } from '../../App';
-import { TripMap } from '../../trip/Map';
+import Grid from '@mui/material/Grid2';
+import { Place } from '../../types';
+import { TripMap } from '../Map/Map';
+import { Event } from './DataPreview.types';
 
-export type Event = {
-  name: string;
-  date: string;
-  time: string;
-  locationName: string;
-  googleMaps: unknown;
-  sourceLink: string;
-  shortDescription: string;
-}
+export const DataPreview = ({ data, isLoading }: { data: (Event | Place)[], isLoading: boolean }) => {
+  const isEvent = (item: Event | Place): item is Event => {
+    return 'shortDescription' in item;
+  };
 
-export const DataPreview = ({ data, isLoading }: { data: any[], isLoading: boolean }) => {
+  const isPlace = (item: Event | Place): item is Place => {
+    return 'workingHours' in item;
+  };
 
   const renderEvents = () => (
     <Grid container spacing={3} sx={{ display: 'flex', textAlign: 'left', marginTop: '30px', marginBottom: '30px'}}>
-        {data?.map(({ name, date, time, locationName, googleMaps, sourceLink, shortDescription }: Event, index: number) => {
-          if(!date || !locationName) return null;
+      {data.filter(isEvent).map(({ name, date, time, locationName, location, sourceLink, shortDescription }, index) => {
+        if(!date || !locationName) return null;
 
-          return (
-            <Grid size={3} key={`${name}-${index}`} sx={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
-              <Card sx={{ padding: '10px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Typography fontSize={18} sx={{ marginBottom: 1}}>{name}</Typography>
-                <Typography><b>Date:</b> {date}</Typography>
-                {time && <Typography><b>Time:</b> {time}</Typography>}
-                <Typography><b>Location:</b> {locationName}</Typography>
-                {shortDescription && <Typography><b>Description:</b> {shortDescription}</Typography>}
-                <Box sx={{ display: 'flex', gap: '20px', justifySelf: 'start-end', marginTop: 'auto'}}>
-                  <Link href={sourceLink} target='_blank' rel="noreferrer">Source</Link>
-                  <Link href={`https://www.google.com/maps/place/?q=place_id:${googleMaps?.place_id}`} target='_blank' rel="noreferrer">Google Maps</Link>
-                </Box>
-              </Card>
-            </Grid>
-          )
-        })}
+        return (
+          <Grid size={3} key={`${name}-${index}`} sx={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
+            <Card sx={{ padding: '10px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Typography fontSize={18} sx={{ marginBottom: 1}}>{name}</Typography>
+              <Typography><b>Date:</b> {date}</Typography>
+              {time && <Typography><b>Time:</b> {time}</Typography>}
+              <Typography><b>Location:</b> {locationName}</Typography>
+              {shortDescription && <Typography><b>Description:</b> {shortDescription}</Typography>}
+              <Box sx={{ display: 'flex', gap: '20px', justifySelf: 'start-end', marginTop: 'auto'}}>
+                {sourceLink && <Link href={sourceLink} target='_blank' rel="noreferrer">Source</Link>}
+                {location?.place_id && <Link href={`https://www.google.com/maps/place/?q=place_id:${location.place_id}`} target='_blank' rel="noreferrer">Google Maps</Link>}
+              </Box>
+            </Card>
+          </Grid>
+        );
+      })}
     </Grid>
-  )
+  );
 
   const renderPlaces = () => (
     <Grid container spacing={2} sx={{ display: 'flex', textAlign: 'left', marginTop: '30px'}}>
-      {data?.map(({ name, workingHours, atmosphere, advice, images }: Place, index: number) => (
+      {data.filter(isPlace).map(({ name, workingHours, atmosphere, advice, images }, index) => (
         <Grid size={4} key={`${name}-${index}`} sx={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
           <Typography fontSize={20} sx={{ marginBottom: 1}}>{name}</Typography>
           <Typography fontWeight="bold" fontSize={13}><b>Working hours: </b>{workingHours}</Typography>
@@ -61,21 +58,21 @@ export const DataPreview = ({ data, isLoading }: { data: any[], isLoading: boole
                     loading="lazy"
                   />
                 </ImageListItem>
-              )
+              );
             })}
           </ImageList>
         </Grid>
       ))}
     </Grid>
-  )
+  );
 
-  if(isLoading) return (<CircularProgress sx={{ marginTop: '30px'}}/>)
-  if(!data.length) return <></>
+  if(isLoading) return (<CircularProgress sx={{ marginTop: '30px'}}/>);
+  if(!data.length) return <></>;
   
   return (
     <>
-      {data?.[1]?.shortDescription ? renderEvents() : renderPlaces()}
+      {data.some(isEvent) ? renderEvents() : renderPlaces()}
       <TripMap data={data} />
     </>
-  ) 
+  );
 };

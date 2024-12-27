@@ -36,60 +36,66 @@ const openai = new OpenAI({
 })
 
 const generateCompletion = async ({message, country, city, tripDuration, tripTheme, isWalkingTrip}: TripRequest) => {
-  const completion = await openai.chat.completions.create({
-    model: "grok-2-1212",
-    messages: [
-      {
-        role: "system",
-        content: `
-          You are travel expert. You know what's best to do and when.
-          You will help to find exactly right place for current mood, desired atmosphere.
-          When asked about places, suggest 2-8 places with specific details from request.
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "grok-2-1212",
+      messages: [
+        {
+          role: "system",
+          content: `
+            You are travel expert. You know what's best to do and when.
+            You will help to find exactly right place for current mood, desired atmosphere.
+            When asked about places, suggest 2-8 places with specific details from request.
 
-          You have to provide the full address of each place.
-          Example of full address: 
-          <example-model>
-            { fullAddress: "123 Main St, New York, NY 10001" }
-            { fullAddress: "Soi Sukhumvit 26, Khlong Tan, Khlong Toei, Bangkok 10110" }
-          </example-model>
-          
-        `,
-      },
-      {
-        role: "user",
-        content: `
-          ${message}.
-          It has to be in or near with ${city}, ${country}
-          ${isWalkingTrip 
-            ? `
-              It has to be walking trip.
-              So distance between places should be 1100 meters or less.
-              Consider only walking type of transportation available.` 
-            : ''}
-
-
-          ${isWalkingTrip 
-            ? `
-            Important instructions for walking routes:
-            1. Return places in the most efficient walking order
-            2. First place should be a good starting point (e.g., near public transport or city center)
-            3. Arrange subsequent places to minimize backtracking
-            4. Each next place should be within 1100 meters from the previous one
-            5. Consider the natural flow of the area (main streets, landmarks, etc.)
-            6. Last place should ideally be near public transport or in a convenient location
-            7. This places must be as close to each other as possible.
-            7. If place is more than 1.5 kilometers away from previous one, do not return it.
-            ` : ''}
-          ${tripTheme ? `Each place has to be related to ${tripTheme} theme.` : ''}
-          ${tripDuration ? `It has to be for ${tripDuration} duration in total time, that I will spend on trip, cosider time for getting/moving between places.` : ''}
+            You have to provide the full address of each place.
+            Example of full address: 
+            <example-model>
+              { fullAddress: "123 Main St, New York, NY 10001" }
+              { fullAddress: "Soi Sukhumvit 26, Khlong Tan, Khlong Toei, Bangkok 10110" }
+            </example-model>
+            
           `,
-      },
-    ],
-    response_format: zodResponseFormat(PossiblePlace, 'event'), 
-    temperature: 0.5
-  });
+        },
+        {
+          role: "user",
+          content: `
+            ${message}.
+            It has to be in or near with ${city}, ${country}
+            ${isWalkingTrip 
+              ? `
+                It has to be walking trip.
+                So distance between places should be 1100 meters or less.
+                Consider only walking type of transportation available.` 
+              : ''}
 
-  return completion.choices[0].message.content;
+
+            ${isWalkingTrip 
+              ? `
+              Important instructions for walking routes:
+              1. Return places in the most efficient walking order
+              2. First place should be a good starting point (e.g., near public transport or city center)
+              3. Arrange subsequent places to minimize backtracking
+              4. Each next place should be within 1100 meters from the previous one
+              5. Consider the natural flow of the area (main streets, landmarks, etc.)
+              6. Last place should ideally be near public transport or in a convenient location
+              7. This places must be as close to each other as possible.
+              7. If place is more than 1.5 kilometers away from previous one, do not return it.
+              ` : ''}
+            ${tripTheme ? `Each place has to be related to ${tripTheme} theme.` : ''}
+            ${tripDuration ? `It has to be for ${tripDuration} duration in total time, that I will spend on trip, cosider time for getting/moving between places.` : ''}
+            `,
+        },
+      ],
+      response_format: zodResponseFormat(PossiblePlace, 'event'), 
+      temperature: 0.5
+    });
+
+    return completion.choices[0].message.content;
+
+    } catch (error) {
+    console.error(error);
+    return null;
+  }
 };
 
 messageRoute.post('/message', async (req: Request, res: Response) => {

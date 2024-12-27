@@ -60,7 +60,7 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
       ))];
     });
 
-    for(let i = 0; i < 4; i++) {
+    for(let i = 0; i < 5; i++) {
       try {
 
         console.log('hrefs[i]', hrefs[i]);
@@ -156,10 +156,6 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
                 locationName: z.string(),
                 fullAddress: z.string(),
                 sourceLink: z.string(),
-                location: z.object({
-                  latitude: z.number(),
-                  longitude: z.number()
-                }),
               })
             )
           , 'event'), 
@@ -182,8 +178,6 @@ export const scrapeEvents = async ({ message, tripTheme, country, city }: { mess
     console.error('Scraping error:', error);
     throw error;
   }
-
-  console.log('events', events);
 
   return events;
 }
