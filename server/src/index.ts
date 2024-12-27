@@ -1,4 +1,4 @@
-import express, { Application, json, Request, Response } from 'express';
+import express, { Application } from 'express';
 import path from 'path';
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -16,6 +16,7 @@ app.use(cors());
 
 // API routes
 app.use('/', routes);
+
 
 // Serve static files from React app
 app.use(express.static(path.join(__dirname, '../../client/dist')));

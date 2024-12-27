@@ -12,26 +12,22 @@ COPY package*.json ./
 COPY client/package*.json ./client/
 COPY server/package*.json ./server/
 
-# Clean install dependencies
+# Install dependencies
 RUN npm ci
 RUN cd client && npm ci
 RUN cd server && npm ci
+
 # Copy source code
 COPY . .
 
-# Build client with specific platform
-# RUN cd client && \
-#     npm rebuild rollup && \
-#     npm run build
+# Build client
+RUN cd client && npm run build
 
 # Build server
-# RUN cd server && npm run build
-
-RUN cd client && npm run dev
-RUN cd server && npm run dev
+RUN cd server && npm run build
 
 # Expose port
 EXPOSE 3000
 
-# Start the server
+# Start the server in production mode
 CMD ["npm", "start"] 
