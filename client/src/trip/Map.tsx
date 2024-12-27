@@ -21,7 +21,7 @@ interface Place {
   
 }
 
-export const TripMap: FC<{ data: Place[] }> = ({ data }) => {
+export const TripMap: FC<{ data: any[] }> = ({ data }) => {
   const map = useMap();
   const [routeUrl, set$routeUrl] = useState<string>('');
   const [totalDistance, setTotalDistance] = useState<number>(0);
