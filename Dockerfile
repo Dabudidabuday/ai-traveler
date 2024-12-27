@@ -12,16 +12,23 @@ COPY package*.json ./
 COPY client/package*.json ./client/
 COPY server/package*.json ./server/
 
-# Install dependencies
+# Install root dependencies
 RUN npm ci
-RUN cd client && npm ci
+
+# Install client dependencies and build tools globally
+RUN cd client && \
+    npm ci && \
+    npm install -g typescript vite
+
+# Install server dependencies
 RUN cd server && npm ci
 
 # Copy source code
 COPY . .
 
 # Build client
-RUN cd client && npm run build
+RUN cd client && \
+    NODE_ENV=production npm run build
 
 # Build server
 RUN cd server && npm run build
