@@ -1,11 +1,27 @@
-import React, { useEffect, useRef, useState } from "react";
+import type { FC } from 'react';
+import { useEffect, useRef, useState } from "react";
 import { useMap, Map } from "@vis.gl/react-google-maps";
 import { Typography } from "@mui/material";
 
-import { Place } from "../App";
 import { computeTotalDistance } from "./Helpers";
 
-export const TripMap = ({ data }: { data: Place[] }) => {
+interface Location {
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    }
+  }
+}
+
+interface Place {
+  location: Location;
+  name: string;
+  description: string;
+  
+}
+
+export const TripMap: FC<{ data: Place[] }> = ({ data }) => {
   const map = useMap();
   const [routeUrl, set$routeUrl] = useState<string>('');
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -14,7 +30,7 @@ export const TripMap = ({ data }: { data: Place[] }) => {
   useEffect(() => {
     if (!data || !map) return;
 
-    const placesLocations = data.map(({ location, name }, index: number) => ({
+    const placesLocations: { key: string; location: { lat: number; lng: number } }[] = data.map(({ location, name }, index: number) => ({
       key: `${name}-${index}`, 
       location: location?.geometry?.location
     }));

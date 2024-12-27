@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { Autocomplete, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,7 +15,7 @@ interface OptionItem {
   value: string;
 }
 
-export const Form = ({ getPlaces }: FormProps) => {
+export const Form: FC<FormProps> = ({ getPlaces }) => {
   const [citiesList, set$citiesList] = useState([]);
   const [country, set$country] = useState('');
   const [city, set$city] = useState('');
@@ -43,7 +43,7 @@ export const Form = ({ getPlaces }: FormProps) => {
     },
   })
 
-  const { data: fetchedCities = [], isPending: isCitiesPending, isLoading: isCitiesLoading } = useQuery({
+  const { isLoading: isCitiesLoading } = useQuery({
     queryKey: ['cities', country],
     enabled: Boolean(country),
     queryFn: async () => {
