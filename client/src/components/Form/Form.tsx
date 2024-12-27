@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Autocomplete, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useForm, Controller } from 'react-hook-form';
@@ -43,7 +43,7 @@ export const Form = ({ getPlaces }: FormProps) => {
     },
   })
 
-  const { data: fetchedCities = [], isPending: isCitiesPending, isLoading: isCitiesLoading } = useQuery({
+  const { isLoading: isCitiesLoading } = useQuery({
     queryKey: ['cities', country],
     enabled: Boolean(country),
     queryFn: async () => {
