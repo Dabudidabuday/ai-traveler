@@ -14,17 +14,21 @@ COPY server/package*.json ./server/
 
 # Clean install dependencies
 RUN npm ci
-
+RUN cd client && npm ci
+RUN cd server && npm ci
 # Copy source code
 COPY . .
 
 # Build client with specific platform
-RUN cd client && \
-    npm rebuild rollup && \
-    npm run build
+# RUN cd client && \
+#     npm rebuild rollup && \
+#     npm run build
 
 # Build server
-RUN cd server && npm run build
+# RUN cd server && npm run build
+
+RUN cd client && npm run dev
+RUN cd server && npm run dev
 
 # Expose port
 EXPOSE 3000
